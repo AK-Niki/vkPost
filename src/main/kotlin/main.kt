@@ -87,25 +87,19 @@ object WallService {
         }
         return false
     }
-    // Абстрактный класс для вложений
+}
     abstract class Attachment(val type: String)
 
-    // Класс для вложений фотографий
     data class PhotoAttachment(val photo: Photo) : Attachment("photo")
 
-    // Класс для вложений видео
     data class VideoAttachment(val video: Video) : Attachment("video")
 
-    // Класс для вложений аудио
     data class AudioAttachment(val audio: Audio) : Attachment("audio")
 
-    // Класс для вложений документов
     data class DocumentAttachment(val document: Document) : Attachment("document")
 
-    // Класс для вложений голосовых сообщений
     data class VoiceMessageAttachment(val voiceMessage: VoiceMessage) : Attachment("voiceMessage")
 
-    // Класс для хранения информации о фотографии
     data class Photo(
         val id: Int,
         val ownerId: Int,
@@ -113,7 +107,6 @@ object WallService {
         val photo604: String
     )
 
-    // Класс для хранения информации о видео
     data class Video(
         val id: Int,
         val ownerId: Int,
@@ -121,7 +114,6 @@ object WallService {
         val duration: Int
     )
 
-    // Класс для хранения информации об аудио
     data class Audio(
         val id: Int,
         val ownerId: Int,
@@ -129,7 +121,6 @@ object WallService {
         val duration: Int
     )
 
-    // Класс для хранения информации о документе
     data class Document(
         val id: Int,
         val ownerId: Int,
@@ -137,11 +128,10 @@ object WallService {
         val size: Int
     )
 
-    // Класс для хранения информации о голосовом сообщении
     data class VoiceMessage(
         val id: Int,
         val ownerId: Int,
         val duration: Int
     )
-}
+
 
