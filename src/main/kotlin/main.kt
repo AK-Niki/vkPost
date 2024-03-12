@@ -53,15 +53,15 @@ data class Views(
 
 // Класс для хранения информации о посте
 data class Post(
-    val id: Int, // идентификатор записи
-    val ownerId: Int, // идентификатор владельца стены, на которой размещена запись
-    val fromId: Int, // идентификатор автора записи
-    val date: Int, // дата публикации записи
-    val text: String, // текст записи
-    val comments: Comments = Comments(), // информация о комментариях к записи
-    val likes: Likes = Likes(), // информация о лайках к записи
-    val reposts: Reposts = Reposts(), // информация о репостах записи
-    val views: Views = Views(), // информация о просмотрах записи
+    val id: Int?, // идентификатор записи
+    val ownerId: Int?, // идентификатор владельца стены, на которой размещена запись
+    val fromId: Int?, // идентификатор автора записи
+    val date: Int?, // дата публикации записи
+    val text: String?, // текст записи
+    val comments: Comments? = Comments(), // информация о комментариях к записи
+    val likes: Likes? = Likes(), // информация о лайках к записи
+    val reposts: Reposts? = Reposts(), // информация о репостах записи
+    val views: Views? = Views(), // информация о просмотрах записи
     val canDelete: Boolean = false, // информация о том, может ли текущий пользователь удалить запись
     val canEdit: Boolean = false, // информация о том, может ли текущий пользователь редактировать запись
 )
