@@ -51,6 +51,21 @@ fun main() {
         println(documentAttachment.type)
         println(voiceMessageAttachment.type)
 
+    // Создаем комментарий
+    val comment = Comment(
+        id = 1,
+        postId = 1,
+        fromId = 789,
+        text = "Какой же крутой пост!"
+    )
+
+    // Добавляем комментарий к посту
+    try {
+        WallService.createComment(comment.postId ?: 0, comment)
+        println("Комментарий успешно добавлен")
+    } catch (e: PostNotFoundException) {
+        println(e.message)
+    }
     }
 
 
@@ -138,8 +153,35 @@ data class VoiceMessage(
     val duration: Int
 )
 
+data class Comment(
+    val id: Int,
+    val postId: Int,
+    val text: String,
+    val fromId: Int? = null
+)
+
+class PostNotFoundException(message: String) : Exception(message)
+
 object WallService {
     val posts = ArrayList<Post>()
+    private var comments = emptyArray<Comment>()
+
+    fun createComment(postId: Int, comment: Comment): Comment {
+        var post: Post? = null
+        for (p in posts) {
+            if (p.id == postId) {
+                post = p
+                break
+            }
+        }
+        if (post == null) {
+            throw PostNotFoundException("Пост с id $postId не найден")
+        }
+
+        val newComment = comment.copy(id = comments.size + 1, postId = postId)
+        comments += newComment
+        return newComment
+    }
 
     private var currentId = 0
 
