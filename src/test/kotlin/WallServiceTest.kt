@@ -1,5 +1,5 @@
+import org.junit.*
 import org.junit.Assert.*
-import org.junit.Test
 
 class WallServiceTest {
 
@@ -64,7 +64,6 @@ class WallServiceTest {
 
     @Test
     fun shouldAddCommentToExistingPost() {
-        // Arrange
         val post = Post(
             id = 1,
             ownerId = 123,
@@ -86,4 +85,46 @@ class WallServiceTest {
         assertEquals(comment, addedComment)
     }
 
+    @Test(expected = PostNotFoundException::class)
+    fun shouldThrowWhenPostNotFound() {
+        val wallService = WallService
+
+        val comment = Comment(
+            id = 0,
+            postId = 100,
+            fromId = 123,
+            text = "Test comment"
+        )
+        wallService.createComment(comment.postId, comment)
+    }
+
+    @Test(expected = AssertionError::class)
+    fun shouldThrowWhenCommentIsOffensive() {
+        // Добавляем пост
+        val post = Post(
+            id = 1,
+            ownerId = 123,
+            fromId = 456,
+            date = 18022024,
+            text = "Пост для теста"
+        )
+        val addedPost = WallService.add(post)
+
+        val comment = Comment(
+            id = 1,
+            postId = 1,
+            fromId = 789,
+            text = "дурак"
+        )
+        WallService.createComment(comment.postId, comment)
+
+        val ownerId = 123
+        val commentId = 1
+        val reason = 0
+
+        WallService.reportComment(ownerId, commentId, reason)
+    }
+
 }
+
+

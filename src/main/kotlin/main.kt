@@ -39,34 +39,67 @@ fun main() {
     WallService.update(updatedPost)
     println("Обновленный пост: $updatedPost")
 
-        val photoAttachment = PhotoAttachment(Photo(1, 123, "photo130", "photo604"))
-        val videoAttachment = VideoAttachment(Video(2, 456, "video title", 60))
-        val audioAttachment = AudioAttachment(Audio(3, 789, "audio title", 120))
-        val documentAttachment = DocumentAttachment(Document(4, 101112, "document title", 1024))
-        val voiceMessageAttachment = VoiceMessageAttachment(VoiceMessage(5, 131415, 30))
+    val photoAttachment = PhotoAttachment(Photo(1, 123, "photo130", "photo604"))
+    val videoAttachment = VideoAttachment(Video(2, 456, "video title", 60))
+    val audioAttachment = AudioAttachment(Audio(3, 789, "audio title", 120))
+    val documentAttachment = DocumentAttachment(Document(4, 101112, "document title", 1024))
+    val voiceMessageAttachment = VoiceMessageAttachment(VoiceMessage(5, 131415, 30))
 
-        println(photoAttachment.type)
-        println(videoAttachment.type)
-        println(audioAttachment.type)
-        println(documentAttachment.type)
-        println(voiceMessageAttachment.type)
+    println(photoAttachment.type)
+    println(videoAttachment.type)
+    println(audioAttachment.type)
+    println(documentAttachment.type)
+    println(voiceMessageAttachment.type)
 
     // Создаем комментарий
     val comment = Comment(
         id = 1,
         postId = 1,
         fromId = 789,
-        text = "Какой же крутой пост!"
+        text = "дурак"
     )
+
+    //try {
+    //WallService.createComment(comment.postId ?: 0, comment)
+    //println("Комментарий успешно добавлен")
+    //} catch (e: PostNotFoundException) {
+    //println(e.message)
+    //} catch (e: CommentViolationException) {
+    //println("Ошибка: ${e.message}")
+    //}
 
     // Добавляем комментарий к посту
     try {
-        WallService.createComment(comment.postId ?: 0, comment)
+        var post: Post? = null
+        for (p in WallService.posts) {
+            if (p.id == comment.postId) {
+                post = p
+                break
+            }
+        }
+
+        if (post == null) {
+            throw PostNotFoundException("Пост с id ${comment.postId} не найден")
+        }
+
+        val addedComment = WallService.createComment(post.id!!, comment)
+
+        try {
+            WallService.reportComment(addedComment.fromId ?: 0, addedComment.id ?: 0, 0)
+            println("Комментарий")
+        } catch (e: CommentViolationException) {
+            println("Ошибка: ${e.message}")
+            return
+        }
+
         println("Комментарий успешно добавлен")
+
     } catch (e: PostNotFoundException) {
         println(e.message)
+    } catch (e: CommentNotFoundException) {
+        println(e.message)
     }
-    }
+}
 
 
 data class Comments(
@@ -160,11 +193,22 @@ data class Comment(
     val fromId: Int? = null
 )
 
+data class Report(
+    val ownerId: Int,
+    val commentId: Int,
+    val reason: Int
+)
+
 class PostNotFoundException(message: String) : Exception(message)
+
+class CommentNotFoundException(message: String) : RuntimeException(message)
+
+class CommentViolationException(message: String) : RuntimeException(message)
 
 object WallService {
     val posts = ArrayList<Post>()
-    private var comments = emptyArray<Comment>()
+    private var comments = ArrayList<Comment>()
+    private val reports = ArrayList<Report>()
 
     fun createComment(postId: Int, comment: Comment): Comment {
         var post: Post? = null
@@ -181,6 +225,67 @@ object WallService {
         val newComment = comment.copy(id = comments.size + 1, postId = postId)
         comments += newComment
         return newComment
+    }
+
+    fun reportComment(ownerId: Int, commentId: Int, reason: Int): Int {
+        // Поиск комментария по его id
+        var comment: Comment? = null
+        for (c in comments) {
+            if (c.id == commentId) {
+                comment = c
+                break
+            }
+        }
+        if (comment == null) {
+            throw CommentNotFoundException("Комментарий с id $commentId не найден")
+        }
+
+        // Нарушение
+        val report = Report(ownerId, commentId, reason)
+        reports.add(report)
+
+        // Проверка на нарушение
+        if (reason == 0 && checkForInsult(comment)) {
+            throw CommentViolationException("Комментарий содержит оскорбление")
+        } else if (reason == 1 && checkForThreat(comment)) {
+            throw CommentViolationException("Комментарий содержит угрозу")
+        } else if (reason == 2 && checkForSpam(comment)) {
+            throw CommentViolationException("Комментарий содержит спам")
+        } else if (reason !in 0..2) {
+            throw IllegalArgumentException("Неверная: $reason")
+        }
+
+        return 1
+    }
+
+    private fun checkForInsult(comment: Comment): Boolean {
+        val insultingWords = listOf("дурак", "редиска")
+        for (word in insultingWords) {
+            if (comment.text.contains(word, ignoreCase = true)) {
+                return true
+            }
+        }
+        return false
+    }
+
+    private fun checkForThreat(comment: Comment): Boolean {
+        val threatPhrases = listOf("я тебя по IP вычислю")
+        for (phrase in threatPhrases) {
+            if (comment.text.contains(phrase, ignoreCase = true)) {
+                return true
+            }
+        }
+        return false
+    }
+
+    private fun checkForSpam(comment: Comment): Boolean {
+        val spamPhrases = listOf("хотите увеличить ... IQ?")
+        for (phrase in spamPhrases) {
+            if (comment.text.contains(phrase, ignoreCase = true)) {
+                return true
+            }
+        }
+        return false
     }
 
     private var currentId = 0
@@ -201,4 +306,5 @@ object WallService {
         }
         return false
     }
+
 }
